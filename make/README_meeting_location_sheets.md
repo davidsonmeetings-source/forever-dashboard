@@ -1,0 +1,108 @@
+# מיקום פגישה לפי טבלה (Google Sheets) — במקום Calendly
+
+מסמך זה מסביר איך להחליף את התלות ב-Calendly בקביעת מיקום/זמינות הפגישות,
+ולעבור למודל מבוסס טבלה ב-Google Sheets (חלופה 2).
+
+## רקע — איך זה עובד היום
+
+שלושת תרחישי ה-AI ב-Make:
+
+| תרחיש | מה הוא עושה | תלות ב-Calendly? |
+|--------|-------------|------------------|
+| `[AI] check_availability` (9432229) | מחזיר ל-AI סלוטים פנויים לפי מיקום+תאריך | **כן** — קורא ל-`event_type_available_times`, event type נפרד לכל מיקום |
+| `[AI] book_meeting` (9432074) | יוצר את הפגישה ב-Fireberry | לא — ממפה `location` → קוד מיקום בעצמו |
+| `[AI] find_meeting` (9431829) | מאתר פגישה קיימת של ליד | לא |
+
+**מסקנה:** רק `check_availability` תלוי ב-Calendly. רק אותו צריך להחליף.
+`book_meeting` ו-`find_meeting` נשארים כמו שהם.
+
+## הלוח הקבוע שחולץ מ-Calendly (בסיס הטבלה)
+
+| יום | מיקום | קוד (`pcfsystemfield105`) | שעות |
+|-----|--------|------|------|
+| ראשון | ראשל"צ פארק הים | 11 | 10:00–19:00 |
+| שני | ב.ס.ר בני ברק | 1 | 09:00–19:00 |
+| שלישי | ראשל"צ | 11 | 10:00–19:00 |
+| רביעי | ראשל"צ | 11 | 10:00–19:00 |
+| חמישי | ראשל"צ | 11 | 10:00–19:00 |
+| שישי | ב.ס.ר | 1 | 09:00–12:00 |
+| שבת | סגור | — | — |
+
+## הגיליונות (כבר נוצרו בחשבון davidson.meetings@gmail.com)
+
+1. **לוח מיקומים שבועי**
+   `1pya4Z0qWltl6omKF7LOb1YOdRXeIuzA6tmGeNrQi5mM`
+   עמודות: `weekday, יום, location_key, location_code, location_name, address, open, close, max_per_slot, active`
+
+2. **חריגים — חגים וימים מיוחדים**
+   `11g1faSOIXilYLotl9OmKN9uXUonDdM6bpxegXGNB2dA`
+   עמודות: `date, weekday, holiday, type, status, open, close, recommended, note`
+   מאותחל עם כל חגי ישראל 5787 (ספט' 2026 – יוני 2027) והמלצת סגירה/שעות מקוצרות.
+
+> השלמה ידנית מומלצת: כתובת מדויקת לכל מיקום (עמודת `address`), ואם רוצים — עמודות
+> לינק זום / ניווט. עדכון השעות/הקיבולת נעשה ישירות בגיליון, בלי לגעת ב-Make.
+
+## הלוגיקה החדשה של check_availability (קובץ `check_availability_sheets.blueprint.json`)
+
+```
+Webhook (location, start_date, end_date, participants)
+  └─ Google Sheets · Search Rows  → שורת היום בלוח השבועי (שעות + קוד מיקום + קיבולת)
+  └─ Google Sheets · Search Rows  → חריג לתאריך (status / שעות מיוחדות)   [יכול להחזיר 0]
+  └─ Aggregator                   → מאחד את החריג לשורה אחת (כדי שהזרימה תמשיך גם בלי חריג)
+  └─ Router
+       ├─ אם סגור (חריג=closed או active=FALSE)  → Webhook Respond {"slots":[]}
+       └─ אם פתוח:
+            └─ Repeater            → סלוט לכל שעה בין open ל-close
+            └─ Fireberry plquery   → ספירת פגישות קיימות בסלוט (status 5/6, אותו קוד מיקום)
+            └─ Aggregator (ספירה)
+            └─ Aggregator (סינון: פנוי < max_per_slot  +  בעתיד) → בונה את הסלוטים
+            └─ Webhook Respond     → {"slots":[{datetime_utc,label_he}...],"note":""}
+```
+
+פורמט התשובה **זהה** למה שה-AI מקבל היום — לכן סוכן ה-AI לא דורש שינוי.
+
+## ייבוא והגדרה (צעד-אחר-צעד)
+
+1. ב-Make: **Create a new scenario → ⋯ → Import Blueprint** והעלה את
+   `check_availability_sheets.blueprint.json`. נוצר תרחיש בדיקה חדש (לא נוגעים בחי).
+2. **Webhook (מודול 1):** לחץ Add → צור webhook חדש. שמור את ה-URL (לשימוש בבדיקה).
+3. **שני מודולי Google Sheets (2 ו-3):** בחר את החיבור `My Google connection`
+   (davidson.meetings@gmail.com). ודא שנבחר ה-Spreadsheet והגיליון הנכונים
+   (ה-IDs כבר ממולאים). אשר ש-**Table contains headers = Yes** ושעמודת הסינון נכונה:
+   - מודול 2: סינון לפי עמודת `weekday` שווה ל-`{{lower(formatDate(...;"dddd"))}}`.
+   - מודול 3: סינון לפי עמודת `date` שווה ל-`{{1.start_date}}`.
+4. **מודול Fireberry (8):** בחר את החיבור `דוידסון` (powerlink), כמו בתרחיש המקורי.
+5. הפעל **Run once**, ושלח בקשת בדיקה ל-webhook (דוגמה למטה). ודא שהתשובה מכילה סלוטים.
+6. כשהבדיקה תקינה — מפנים את סוכן ה-AI ל-URL החדש (או מחליפים את גוף התרחיש החי).
+
+### בקשת בדיקה לדוגמה
+```
+POST <WEBHOOK_URL>
+Content-Type: application/json
+
+{ "location": "rishon", "start_date": "2026-07-02", "end_date": "2026-07-02",
+  "participantsIdentifiers": "1075468135658098#972505623016" }
+```
+(2026-07-02 = יום חמישי = ראשל"צ, 10:00–19:00 — אמורים לחזור סלוטים שעתיים פנויים.)
+
+## נקודות לאימות אחרי הייבוא (החלקים הרגישים)
+
+מבנה ה-Blueprint אומת מול סכימת Make, אבל כמה דברים תלויים בנתוני-העמודה החיים
+ולכן כדאי לוודא ב-Make אחרי הייבוא:
+
+- **שמות שדות הפלט של Google Sheets** — הלוגיקה מניחה שהשורה מוחזרת לפי שמות
+  הכותרות (`{{2.open}}`, `{{2.location_code}}`, `{{2.max_per_slot}}`, `{{2.active}}`,
+  `{{get(4.array;1).status}}`). אם Make מחזיר שמות אחרים (למשל אות עמודה) — עדכן את
+  ההפניות בהתאם (בורר שדות במיפוי יראה לך את השמות האמיתיים).
+- **עמודת `date` בגיליון החריגים** — סמן אותה כ-**Plain text** (Format → Number →
+  Plain text) כדי שההשוואה לטקסט `2026-09-21` תתפוס. אם החריגים לא נתפסים, זו הסיבה.
+- **טוקן היום בשבוע** — ודא ש-`formatDate(...;"dddd")` מחזיר שם יום באנגלית
+  (sunday…saturday). אם הלוקאל שונה, התאם את עמודת `weekday` או את הטוקן.
+- **קיבולת** — הסף הוא `max_per_slot` (כרגע 5): סלוט נחשב מלא כשיש בו 5+ פגישות.
+
+## מה הלאה (שלב 2, אופציונלי)
+
+- שכבת חריגים: עברו על גיליון החריגים ואשרו/שנו את עמודת `recommended` (סגור /
+  שעות מקוצרות) — ערכי `status`/`open`/`close` כבר מולאו לפי ההמלצה.
+- אם בעתיד יום מסוים יקבל שני מיקומים, אפשר להרחיב את הלוח השבועי לשורה לכל
+  (יום × מיקום) ולסנן גם לפי `location`.
