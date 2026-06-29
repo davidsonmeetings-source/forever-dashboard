@@ -28,19 +28,34 @@
 | שישי | ב.ס.ר | 1 | 09:00–12:00 |
 | שבת | סגור | — | — |
 
-## הגיליונות (כבר נוצרו בחשבון davidson.meetings@gmail.com)
+## הגיליון המאוחד — קובץ אחד, שני טאבים + טאב הוראות
 
-1. **לוח מיקומים שבועי**
-   `1pya4Z0qWltl6omKF7LOb1YOdRXeIuzA6tmGeNrQi5mM`
-   עמודות: `weekday, יום, location_key, location_code, location_name, address, open, close, max_per_slot, active`
+הכול מרוכז בקובץ `make/locations_template.xlsx` עם 3 טאבים:
 
-2. **חריגים — חגים וימים מיוחדים**
-   `11g1faSOIXilYLotl9OmKN9uXUonDdM6bpxegXGNB2dA`
-   עמודות: `date, weekday, holiday, type, status, open, close, recommended, note`
-   מאותחל עם כל חגי ישראל 5787 (ספט' 2026 – יוני 2027) והמלצת סגירה/שעות מקוצרות.
+1. **הוראות** — מקרא צבעים והסבר מלא איזה תא מותר/אסור לשנות.
+2. **לוח שבועי** — `weekday, יום, location_key, location_code, location_name, address, open, close, max_per_slot, active`
+3. **חריגים** — `date, weekday, holiday, type, status, open, close, recommended, note`
+   (מאותחל עם כל חגי ישראל 5787, ספט' 2026 – יוני 2027, והמלצת סגירה/שעות מקוצרות.)
 
-> השלמה ידנית מומלצת: כתובת מדויקת לכל מיקום (עמודת `address`), ואם רוצים — עמודות
-> לינק זום / ניווט. עדכון השעות/הקיבולת נעשה ישירות בגיליון, בלי לגעת ב-Make.
+**צביעת תאים (מה משפיע על האוטומציה):**
+- 🟩 **ירוק = מותר לערוך, משפיע על האוטומציה** — `open`, `close`, `max_per_slot`, `active` (לוח שבועי); `status`, `open`, `close` (חריגים).
+- 🟧 **כתום = עמודת המפתח `date`** — אפשר להוסיף שורות, חובה פורמט `YYYY-MM-DD` כטקסט.
+- 🟥 **אדום = אסור לשנות** — `weekday`, `location_key`, `location_code` (מפתחות האוטומציה).
+- ⬜ **אפור = תצוגה בלבד** — שם מיקום, כתובת, שם חג, הערה (לא משפיע).
+
+לכל כותרת יש גם הערה (Note) בתוך התא שמסבירה אותה.
+
+### העלאת הקובץ ל-Google Sheets (פעם אחת)
+1. גרור את `locations_template.xlsx` ל-Google Drive (חשבון davidson.meetings@gmail.com).
+2. פתח אותו → **File → Save as Google Sheets** (או פשוט פתיחה תמיר אוטומטית).
+   הטאבים, הצבעים וההערות נשמרים.
+3. העתק את ה-Spreadsheet ID מה-URL — תזין אותו בשני מודולי ה-Sheets ב-Blueprint
+   (שדה `PASTE_UNIFIED_SPREADSHEET_ID`), ובכל מודול תבחר את הטאב הנכון
+   (מודול 2 → `לוח שבועי`, מודול 3 → `חריגים`).
+
+> שני הגיליונות הנפרדים שנוצרו קודם (`לוח מיקומים שבועי`, `חריגים — חגים…`) הוחלפו
+> בקובץ המאוחד הזה — אפשר למחוק אותם מה-Drive.
+> השלמה מומלצת: כתובת מדויקת לכל מיקום (עמודת `address`).
 
 ## הלוגיקה החדשה של check_availability (קובץ `check_availability_sheets.blueprint.json`)
 
@@ -67,8 +82,9 @@ Webhook (location, start_date, end_date, participants)
    `check_availability_sheets.blueprint.json`. נוצר תרחיש בדיקה חדש (לא נוגעים בחי).
 2. **Webhook (מודול 1):** לחץ Add → צור webhook חדש. שמור את ה-URL (לשימוש בבדיקה).
 3. **שני מודולי Google Sheets (2 ו-3):** בחר את החיבור `My Google connection`
-   (davidson.meetings@gmail.com). ודא שנבחר ה-Spreadsheet והגיליון הנכונים
-   (ה-IDs כבר ממולאים). אשר ש-**Table contains headers = Yes** ושעמודת הסינון נכונה:
+   (davidson.meetings@gmail.com), הזן את ה-Spreadsheet ID של הקובץ המאוחד
+   (במקום `PASTE_UNIFIED_SPREADSHEET_ID`), ובחר את הטאב: מודול 2 → `לוח שבועי`,
+   מודול 3 → `חריגים`. אשר ש-**Table contains headers = Yes** ושעמודת הסינון נכונה:
    - מודול 2: סינון לפי עמודת `weekday` שווה ל-`{{lower(formatDate(...;"dddd"))}}`.
    - מודול 3: סינון לפי עמודת `date` שווה ל-`{{1.start_date}}`.
 4. **מודול Fireberry (8):** בחר את החיבור `דוידסון` (powerlink), כמו בתרחיש המקורי.

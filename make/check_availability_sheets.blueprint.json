@@ -26,8 +26,8 @@
       "mapper": {
         "from": "drive",
         "limit": "1",
-        "spreadsheetId": "1pya4Z0qWltl6omKF7LOb1YOdRXeIuzA6tmGeNrQi5mM",
-        "sheetId": "0",
+        "spreadsheetId": "PASTE_UNIFIED_SPREADSHEET_ID",
+        "sheetId": "__SELECT_TAB_לוח_שבועי__",
         "includesHeaders": true,
         "tableFirstRow": "A1:Z1",
         "filter": [
@@ -51,8 +51,8 @@
       "mapper": {
         "from": "drive",
         "limit": "1",
-        "spreadsheetId": "11g1faSOIXilYLotl9OmKN9uXUonDdM6bpxegXGNB2dA",
-        "sheetId": "0",
+        "spreadsheetId": "PASTE_UNIFIED_SPREADSHEET_ID",
+        "sheetId": "__SELECT_TAB_חריגים__",
         "includesHeaders": true,
         "tableFirstRow": "A1:Z1",
         "filter": [
