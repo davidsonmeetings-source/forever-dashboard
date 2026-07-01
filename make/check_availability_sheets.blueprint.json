@@ -1,0 +1,233 @@
+{
+  "name": "[AI] check_availability — Sheets (test)",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": { "hook": null, "maxResults": 1 },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": { "parameters": { "hook": { "data": { "editable": "true" }, "label": "AI - check availability (Sheets)" } } },
+        "interface": [
+          { "name": "end_date", "type": "text" },
+          { "name": "location", "type": "text" },
+          { "name": "start_date", "type": "text" },
+          { "name": "participantsIdentifiers", "type": "text" }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "google-sheets:filterRows",
+      "version": 2,
+      "parameters": { "__IMTCONN__": null },
+      "mapper": {
+        "from": "drive",
+        "limit": "1",
+        "spreadsheetId": "PASTE_UNIFIED_SPREADSHEET_ID",
+        "sheetId": "__SELECT_TAB_לוח_שבועי__",
+        "includesHeaders": true,
+        "tableFirstRow": "A1:Z1",
+        "filter": [
+          [
+            { "a": "A", "o": "text:equal:ci", "b": "{{lower(formatDate(parseDate(1.start_date; \"YYYY-MM-DD\"); \"dddd\"))}}" }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": { "x": 300, "y": 0 },
+        "restore": {
+          "parameters": { "__IMTCONN__": { "label": "My Google connection (davidson.meetings@gmail.com)", "data": { "scoped": "true", "connection": "google" } } }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "google-sheets:filterRows",
+      "version": 2,
+      "parameters": { "__IMTCONN__": null },
+      "mapper": {
+        "from": "drive",
+        "limit": "1",
+        "spreadsheetId": "PASTE_UNIFIED_SPREADSHEET_ID",
+        "sheetId": "__SELECT_TAB_חריגים__",
+        "includesHeaders": true,
+        "tableFirstRow": "A1:Z1",
+        "filter": [
+          [
+            { "a": "A", "o": "text:equal:ci", "b": "{{1.start_date}}" }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "restore": {
+          "parameters": { "__IMTCONN__": { "label": "My Google connection (davidson.meetings@gmail.com)", "data": { "scoped": "true", "connection": "google" } } }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "builtin:BasicAggregator",
+      "version": 1,
+      "parameters": { "feeder": 3 },
+      "mapper": {
+        "status": "{{3.status}}",
+        "open": "{{3.open}}",
+        "close": "{{3.close}}"
+      },
+      "metadata": {
+        "designer": { "x": 900, "y": 0 },
+        "restore": { "extra": { "feeder": { "label": "Exceptions row [3]" }, "target": { "label": "Custom" } } }
+      }
+    },
+    {
+      "id": 5,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "mapper": null,
+      "metadata": { "designer": { "x": 1200, "y": 0 } },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 6,
+              "module": "gateway:WebhookRespond",
+              "version": 1,
+              "filter": {
+                "name": "סגור ביום זה",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{if(length(4.array) > 0; if(get(4.array; 1).status = \"closed\"; \"closed\"; \"open\"); if(2.active = \"TRUE\"; \"open\"; \"closed\"))}}",
+                      "b": "closed",
+                      "o": "text:equal"
+                    }
+                  ]
+                ]
+              },
+              "mapper": { "body": "{\"slots\":[],\"note\":\"סגור ביום זה\"}", "status": "200", "headers": [] },
+              "metadata": { "designer": { "x": 1500, "y": -300 } },
+              "parameters": {}
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 7,
+              "module": "builtin:BasicRepeater",
+              "version": 1,
+              "filter": {
+                "name": "פתוח",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{if(length(4.array) > 0; if(get(4.array; 1).status = \"closed\"; \"closed\"; \"open\"); if(2.active = \"TRUE\"; \"open\"; \"closed\"))}}",
+                      "b": "closed",
+                      "o": "text:notequal"
+                    }
+                  ]
+                ]
+              },
+              "mapper": {
+                "start": "{{parseNumber(get(split(if(length(4.array) > 0 and get(4.array; 1).open != \"\"; get(4.array; 1).open; 2.open); \":\"); 1))}}",
+                "repeats": "{{parseNumber(get(split(if(length(4.array) > 0 and get(4.array; 1).close != \"\"; get(4.array; 1).close; 2.close); \":\"); 1)) - parseNumber(get(split(if(length(4.array) > 0 and get(4.array; 1).open != \"\"; get(4.array; 1).open; 2.open); \":\"); 1))}}"
+              },
+              "metadata": { "designer": { "x": 1500, "y": 0 } }
+            },
+            {
+              "id": 8,
+              "module": "powerlink:plquery",
+              "version": 1,
+              "parameters": { "__IMTCONN__": null },
+              "mapper": {
+                "limit": "10",
+                "objecttype": "6",
+                "query": [
+                  [
+                    { "a": "pcfsystemfield105", "b": "{{2.location_code}}", "o": "=" },
+                    { "a": "scheduledstart", "b": "{{1.start_date}}T{{if(7.i < 10; \"0\" + 7.i; 7.i)}}:00:00", "o": ">=" },
+                    { "a": "scheduledstart", "b": "{{1.start_date}}T{{if(7.i < 10; \"0\" + 7.i; 7.i)}}:59:00", "o": "<=" },
+                    { "a": "statuscode", "b": "5", "o": "=" }
+                  ],
+                  [
+                    { "a": "pcfsystemfield105", "b": "{{2.location_code}}", "o": "=" },
+                    { "a": "scheduledstart", "b": "{{1.start_date}}T{{if(7.i < 10; \"0\" + 7.i; 7.i)}}:00:00", "o": ">=" },
+                    { "a": "scheduledstart", "b": "{{1.start_date}}T{{if(7.i < 10; \"0\" + 7.i; 7.i)}}:59:00", "o": "<=" },
+                    { "a": "statuscode", "b": "6", "o": "=" }
+                  ]
+                ]
+              },
+              "metadata": {
+                "designer": { "x": 1800, "y": 0 },
+                "restore": { "parameters": { "__IMTCONN__": { "label": "דוידסון", "data": { "scoped": "true", "connection": "powerlink" } } } }
+              }
+            },
+            {
+              "id": 9,
+              "module": "builtin:BasicAggregator",
+              "version": 1,
+              "parameters": { "feeder": 8 },
+              "mapper": { "aid": "{{8.activityid}}" },
+              "metadata": {
+                "designer": { "x": 2100, "y": 0 },
+                "restore": { "extra": { "feeder": { "label": "powerlink [8]" }, "target": { "label": "Custom" } } }
+              }
+            },
+            {
+              "id": 10,
+              "module": "builtin:BasicAggregator",
+              "version": 1,
+              "parameters": { "feeder": 7 },
+              "filter": {
+                "name": "פנוי ועתידי",
+                "conditions": [
+                  [
+                    { "a": "{{length(9.array)}}", "b": "{{2.max_per_slot}}", "o": "number:less" },
+                    { "a": "{{parseDate(1.start_date + \"T\" + (if(7.i < 10; \"0\" + 7.i; 7.i)) + \":00:00\"; \"YYYY-MM-DDTHH:mm:ss\"; \"Asia/Jerusalem\")}}", "b": "{{now}}", "o": "date:greater" }
+                  ]
+                ]
+              },
+              "mapper": {
+                "frag": "{\"datetime_utc\":\"{{formatDate(parseDate(1.start_date + \"T\" + (if(7.i < 10; \"0\" + 7.i; 7.i)) + \":00:00\"; \"YYYY-MM-DDTHH:mm:ss\"; \"Asia/Jerusalem\"); \"YYYY-MM-DDTHH:mm:ss[Z]\"; \"UTC\")}}\",\"label_he\":\"{{formatDate(parseDate(1.start_date + \"T\" + (if(7.i < 10; \"0\" + 7.i; 7.i)) + \":00:00\"; \"YYYY-MM-DDTHH:mm:ss\"; \"Asia/Jerusalem\"); \"DD/MM HH:mm\"; \"Asia/Jerusalem\")}}\"}"
+              },
+              "metadata": {
+                "designer": { "x": 2400, "y": 0 },
+                "restore": { "extra": { "feeder": { "label": "Repeater [7]" }, "target": { "label": "Custom" } } }
+              }
+            },
+            {
+              "id": 11,
+              "module": "gateway:WebhookRespond",
+              "version": 1,
+              "mapper": {
+                "body": "{\"slots\":[{{join(map(10.array; \"frag\"); \",\")}}],\"note\":\"\"}",
+                "status": "200",
+                "headers": []
+              },
+              "metadata": { "designer": { "x": 2700, "y": 0 }, "parameters": {} }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false
+    },
+    "designer": { "orphans": [] }
+  }
+}
