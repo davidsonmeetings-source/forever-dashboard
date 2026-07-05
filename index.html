@@ -23,7 +23,22 @@ async function unlock(){
     const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:dec(SALT),iterations:ITER,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
     const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:dec(IV)},key,dec(CT));
     const html=new TextDecoder().decode(pt);
-    document.open();document.write(html);document.close();
+    /* ===== ניהול מיקומים (Airtable) — הדבק כאן את כתובת ה-embed מ-Airtable (Share view → Embed). כל עוד ריק, אין שינוי בדשבורד. ===== */
+    const AIRTABLE_EMBED_URL="";
+    let out=html;
+    try{
+      if(AIRTABLE_EMBED_URL){
+        const _p='<button dir="rtl" onclick="document.getElementById(\'laOv\').style.display=\'flex\'" style="position:fixed;bottom:18px;left:18px;z-index:99999;background:#1c3461;color:#fff;border:0;border-radius:24px;padding:12px 18px;font:600 14px Segoe UI,Arial;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.25)">📍 ניהול מיקומים</button>'
+          +'<div id="laOv" dir="rtl" onclick="if(event.target===this)this.style.display=\'none\'" style="display:none;position:fixed;inset:0;z-index:100000;background:rgba(15,30,61,.55);align-items:center;justify-content:center">'
+          +'<div style="background:#fff;border-radius:14px;width:94vw;height:92vh;display:flex;flex-direction:column;overflow:hidden">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#0f1e3d;color:#fff">'
+          +'<span style="font:700 16px Segoe UI,Arial">ניהול מיקומים ותאריכים</span>'
+          +'<button onclick="document.getElementById(\'laOv\').style.display=\'none\'" style="background:0;border:0;color:#fff;font-size:22px;cursor:pointer">✕</button></div>'
+          +'<iframe src="'+AIRTABLE_EMBED_URL+'" style="border:0;flex:1;width:100%"></iframe></div></div>';
+        out = out.indexOf('</body>')>-1 ? out.replace('</body>', _p+'</body>') : out+_p;
+      }
+    }catch(e){}
+    document.open();document.write(out);document.close();
   }catch(e){err.textContent='סיסמה שגויה';}
 }
 document.getElementById('go').onclick=unlock;

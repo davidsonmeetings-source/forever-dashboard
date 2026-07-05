@@ -41,26 +41,28 @@
 > יתרון על Sheets: `Single select`/`Checkbox`/`Date` מונעים טעויות פורמט,
 > יש היסטוריית שינויים והרשאות מובנות.
 
-## 2) הטמעה בדשבורד (iframe)
+## 2) הטמעה בדשבורד — כבר מחווט ב-`index.html`
 
-ב-Airtable: פותחים את ה-Grid view → **Share view → Embed this view** → מעתיקים
-את כתובת ה-embed (מהצורה `https://airtable.com/embed/app…/shr…`).
+מנגנון ההטמעה כבר קיים בקוד הדשבורד: בזמן הפענוח מוזרק כפתור צף
+**📍 ניהול מיקומים** (פינה שמאלית-תחתונה) שפותח חלון עם טבלת Airtable.
+ההזרקה מוגנת ב-try/catch ו**אינרטית כברירת מחדל** — כל עוד הקבוע ריק אין
+שום שינוי בדשבורד.
 
-מוסיפים לדשבורד טאב/סקשן "ניהול מיקומים" עם:
+**כדי להפעיל (שורה אחת, בלי הצפנה מחדש):**
+1. ב-Airtable: Grid view → **Share view → Embed this view** → העתק את כתובת
+   ה-embed (מהצורה `https://airtable.com/embed/app…/shr…`).
+2. ב-`index.html` מצא את השורה:
+   ```js
+   const AIRTABLE_EMBED_URL="";
+   ```
+   והדבק את הכתובת בין הגרשיים. זהו — commit ל-branch, והכפתור יופיע.
 
-```html
-<section id="locations-admin">
-  <h2>ניהול מיקומים ותאריכים</h2>
-  <iframe src="https://airtable.com/embed/appXXXXXXXX/shrYYYYYYYY"
-          width="100%" height="640"
-          style="border:1px solid #d6deea;border-radius:10px" frameborder="0"></iframe>
-</section>
-```
+הקבוע נמצא בקוד ה**חיצוני** (הלא-מוצפן), שרץ בזמן ריצה על התוכן המפוענח —
+לכן **אין צורך בסיסמה או בהצפנה מחדש**.
 
-> **חשוב (אבטחה):** אל תטמיע הרשאות כתיבה בקוד הדשבורד. ה-iframe מפנה ל-Airtable,
-> ו-Airtable מנהל את ההרשאות. אם ה-view משותף לעריכה — כל מי שנכנס לדשבורד יכול
-> לערוך; אם רוצים הגבלה, שתפו view לקריאה-בלבד ותערכו ישירות ב-Airtable, או
-> השתמשו ב-view עם הרשאות.
+> **חשוב (אבטחה):** אין הרשאות כתיבה בקוד — ה-iframe רק מפנה ל-Airtable,
+> ו-Airtable מנהל את ההרשאות. אם ה-view משותף לעריכה, כל מי שנכנס לדשבורד יכול
+> לערוך; להגבלה, שתפו view לקריאה-בלבד או השתמשו ב-view עם הרשאות.
 
 ## 3) התאמת ה-Make (במקום מודולי Google Sheets)
 
