@@ -8,10 +8,18 @@
    Dashboard  ──iframe──►  Airtable  ◄──native module──  Make (check_availability)
 ```
 
-## 1) יצירת ה-Base ב-Airtable
+## ✅ 1) ה-Base כבר נבנה אוטומטית (API)
 
-צור Base חדש (למשל "Davidson · מיקומים ופגישות") עם **שתי טבלאות**. ייבא את
-ה-CSV לכל טבלה (Add/Import → CSV), ואז הגדר את סוגי השדות:
+| | מזהה |
+|---|---|
+| Base | `appVRL6NLQCYLTpxZ` |
+| טבלה `Weekly Schedule` | `tblgPrrTAghUEjg94` |
+| טבלה `Exceptions` | `tblz5sK3fOV2acPJE` |
+
+שתי הטבלאות מלאות (7 + 27 שורות), עם סוגי שדות מוגדרים (Single select למיקום/סטטוס,
+Date לתאריך, Checkbox ל-active). ה-CSV להלן נשמרים לגיבוי/ייבוא-חוזר בלבד.
+
+<details><summary>סכימת השדות (לעיון)</summary>
 
 ### טבלה `Weekly Schedule` (ייבוא: `weekly_schedule.csv`)
 | שדה | סוג מומלץ | הערה |
@@ -37,6 +45,8 @@
 | `close` | Single line text | **עריכה — משפיע** (רק ב-special) |
 | `recommended` | Single line text | המלצה בלבד |
 | `note` | Single line text | תצוגה |
+
+</details>
 
 > יתרון על Sheets: `Single select`/`Checkbox`/`Date` מונעים טעויות פורמט,
 > יש היסטוריית שינויים והרשאות מובנות.
@@ -66,15 +76,16 @@
 
 ## 3) התאמת ה-Make (במקום מודולי Google Sheets)
 
-מחליפים את שני מודולי ה-Search של Google Sheets ב-**Airtable → Search Records**:
+מחליפים את שני מודולי ה-Search של Google Sheets ב-**Airtable → Search Records**
+(צריך ליצור חיבור Airtable ב-Make — OAuth חד-פעמי):
 
-- **מודול 2 (לוח שבועי):** Base = ה-Base, Table = `Weekly Schedule`,
-  `filterByFormula`:
+- **מודול 2 (לוח שבועי):** Base = `appVRL6NLQCYLTpxZ`, Table = `Weekly Schedule`
+  (`tblgPrrTAghUEjg94`), `filterByFormula`:
   ```
   LOWER({weekday}) = "{{lower(formatDate(parseDate(1.start_date; "YYYY-MM-DD"); "dddd"))}}"
   ```
-- **מודול 3 (חריגים):** Table = `Exceptions`,
-  `filterByFormula`:
+- **מודול 3 (חריגים):** Base = `appVRL6NLQCYLTpxZ`, Table = `Exceptions`
+  (`tblz5sK3fOV2acPJE`), `filterByFormula`:
   ```
   DATETIME_FORMAT({date}; "YYYY-MM-DD") = "{{1.start_date}}"
   ```
@@ -86,7 +97,9 @@
 > `filterByFormula` של Airtable יציב יותר מסינון Sheets (אין בעיות פורמט/עמודה),
 > ולכן זו גם שדרוג אמינות ולא רק UX.
 
-## מה צריך ממך כדי שאסיים
-1. ה-Base מוקם ושתי הטבלאות מיובאות → שלח לי **Base ID** (`app…`) ושמות הטבלאות.
-2. כתובת ה-**embed** של ה-Grid view.
-3. איך נערכת ההטמעה בדשבורד — ראה השאלה בצ'אט (הדשבורד מוצפן, צריך את המקור).
+## מה נשאר
+1. ✅ ה-Base + הטבלאות + הנתונים — בוצע אוטומטית.
+2. ✅ מנגנון ההטמעה בדשבורד — מחווט ב-`index.html` (אינרטי עד שמזינים URL).
+3. ⬜ **כתובת ה-embed** של ה-Grid view (Share view → Embed) — הדבר היחיד שאני עוד צריך
+   ממך, כי Airtable לא חושף יצירת קישור-שיתוף דרך API. שלח לי אותו ואפעיל את הכפתור.
+4. ⬜ **Make:** ליצור חיבור Airtable ב-Make ולהחליף את שני מודולי ה-Sheets לפי המיפוי למעלה.
