@@ -1,0 +1,8 @@
+weekday,location_key,location_code,location_name,address,open,close,max_per_slot,active
+sunday,rishon,11,ראשון לציון פארק הים,,10:00,19:00,5,true
+monday,bnei,1,ב.ס.ר בני ברק,,09:00,19:00,5,true
+tuesday,rishon,11,ראשון לציון פארק הים,,10:00,19:00,5,true
+wednesday,rishon,11,ראשון לציון פארק הים,,10:00,19:00,5,true
+thursday,rishon,11,ראשון לציון פארק הים,,10:00,19:00,5,true
+friday,bnei,1,ב.ס.ר בני ברק,,09:00,12:00,5,true
+saturday,,,,,,,0,false
