@@ -1,0 +1,35 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  structure:
+    name: structural checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit / structural tests
+        run: npm test
+      - name: Publish validation (structural mode)
+        # Add a DASHBOARD_PW repository secret to enable the decryption
+        # round-trip check; without it, structural checks still run.
+        env:
+          DASHBOARD_PW: ${{ secrets.DASHBOARD_PW }}
+        run: npm run validate
+
+  e2e:
+    name: unlock flow (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

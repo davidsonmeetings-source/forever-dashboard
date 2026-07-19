@@ -1,0 +1,14 @@
+{
+  "name": "forever-dashboard",
+  "private": true,
+  "type": "module",
+  "description": "Davidson Forever live dashboard (encrypted) — tests for the unlock flow and publish pipeline",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.mjs\"",
+    "test:e2e": "playwright test",
+    "validate": "node scripts/validate-publish.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}
