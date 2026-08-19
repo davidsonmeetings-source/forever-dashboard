@@ -1,0 +1,72 @@
+﻿[
+    {
+        "out":  "render-01.jpg",
+        "orig":  "Davidson Forever Aerial.png",
+        "folder":  "הדמיות",
+        "dims":  "1600x1986",
+        "kb":  652
+    },
+    {
+        "out":  "render-02.jpg",
+        "orig":  "Davidson project_aerial_01.jpg.jpeg",
+        "folder":  "הדמיות",
+        "dims":  "1600x900",
+        "kb":  220
+    },
+    {
+        "out":  "render-03.jpg",
+        "orig":  "Davidson project_aerial_02.jpg",
+        "folder":  "הדמיות",
+        "dims":  "1600x900",
+        "kb":  207
+    },
+    {
+        "out":  "render-04.jpg",
+        "orig":  "Davidson project_aerial_03.jpg",
+        "folder":  "הדמיות",
+        "dims":  "1600x900",
+        "kb":  272
+    },
+    {
+        "out":  "render-05.jpg",
+        "orig":  "Davidson project_int_01 (1).jpg",
+        "folder":  "הדמיות",
+        "dims":  "1600x900",
+        "kb":  202
+    },
+    {
+        "out":  "render-06.jpg",
+        "orig":  "forever-sunset.png",
+        "folder":  "הדמיות",
+        "dims":  "1125x1398",
+        "kb":  235
+    },
+    {
+        "out":  "render-07.jpg",
+        "orig":  "מבט בין הבניינים.png",
+        "folder":  "הדמיות מהאדריכל",
+        "dims":  "1600x679",
+        "kb":  242
+    },
+    {
+        "out":  "render-08.jpg",
+        "orig":  "מבט מהפארק.png",
+        "folder":  "הדמיות מהאדריכל",
+        "dims":  "1600x679",
+        "kb":  248
+    },
+    {
+        "out":  "render-09.jpg",
+        "orig":  "מבט מהשדרה.png",
+        "folder":  "הדמיות מהאדריכל",
+        "dims":  "1600x679",
+        "kb":  261
+    },
+    {
+        "out":  "render-10.jpg",
+        "orig":  "מבנים מרחוק.png",
+        "folder":  "הדמיות מהאדריכל",
+        "dims":  "1600x679",
+        "kb":  215
+    }
+]
